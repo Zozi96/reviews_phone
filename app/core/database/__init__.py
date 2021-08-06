@@ -1,0 +1,3 @@
+class Database:
+    SQLALCHEMY_DATABASE_URI: str
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
