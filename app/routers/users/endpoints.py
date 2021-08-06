@@ -2,7 +2,8 @@ from flask import request, jsonify
 from flask.views import MethodView
 from flask_jwt_extended import create_access_token
 from app.models.users import User
-from app.schemas.users import user_schema, params_user_schema
+from app.schemas.users import (
+    user_schema, users_schema, params_user_schema, params_user_login_schema)
 
 
 class SignupUserView(MethodView):
@@ -17,24 +18,34 @@ class SignupUserView(MethodView):
             password=data.get('password')
         )
         return jsonify({
-            'message': 'User created successfully', 
+            'message': 'User created successfully',
             'data': user_schema.dump(user)
         }), 201
+
+
+class UserListView(MethodView):
+    def get(self):
+        users = User.query.all()
+        return jsonify(users_schema.dump(users)), 200
+
+
+class UserGetEdit(MethodView):
+    def get(self, id):
+        user = User.query.get_or_404(id)
+        return jsonify(user_schema.dump(user)), 200
 
 
 class LoginUserView(MethodView):
     def post(self):
         data = request.get_json()
-        username = data.get('username')
-        password = data.get('password')
-        if not username or not len(username) > 0:
-            return jsonify(message="Username is required"), 400
-        if not password or not len(password) > 0:
-            return jsonify(message="Password is required"), 400
+        user = User.get_by_username(data.get('username'))
+        error = params_user_login_schema.validate(data)
+        if error:
+            return jsonify(error), 400
+        elif not user.check_password(data.get('password')):
+            return jsonify(password=['Wrong password']), 400
 
-        user = User.get_by_username(username)
-        if not user or not user.check_password(password):
-            return jsonify(message="Invalid username or password"), 401
-        access_token = create_access_token(identity=user.id)
-
-        return jsonify(access_token=access_token), 200
+        return jsonify({
+            'username': user.username,
+            'access_token': create_access_token(identity=user.id)
+        }), 200

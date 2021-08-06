@@ -39,7 +39,26 @@ class ParamsUserSchema(ma.Schema):
     )
 
 
+class ParamsUserLogin(ma.Schema):
+    def username_validator(value):
+        if not User.get_by_username(value):
+            raise ValidationError('Username not found')
+
+    username = fields.Str(
+        required=True,
+        validate=validate.And(
+            validate.Length(min=1, max=80),
+            username_validator
+        )
+    )
+    password = fields.Str(
+        required=True,
+        validate=validate.Length(min=1)
+    )
+
+
 user_schema = UserSchema()
 users_schema = UserSchema(many=True)
 
 params_user_schema = ParamsUserSchema()
+params_user_login_schema = ParamsUserLogin()
