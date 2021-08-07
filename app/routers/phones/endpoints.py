@@ -1,41 +1,32 @@
 from flask import request, jsonify
 from flask.views import MethodView
 from app.models.phones import Brand, Phone
+from app.schemas.brands import brand_schema, brands_schema, params_brand_schema
 
 
 class BrandCreateView(MethodView):
     def post(self):
         data = request.get_json()
-        name = data.get('name')
-        description = data.get('description')
-        if not name or not len(name) > 0:
-            return jsonify(message="Name is required"), 400
-        elif len(name) > 50:
-            return jsonify(message="Name must be less than 50 characters"), 400
-
-        if Brand.get_by_name(name):
-            return jsonify(message="Name already exists"), 400
-
-        brand = Brand.create(name, description)
-        return jsonify({
-            'message': 'Brand successfully created',
-            'data': {
-                'name': brand.name,
-                'description': brand.description if brand.description else 'Description not registered'
-            }
-        }), 201
+        errors = params_brand_schema.validate(data)
+        if errors:
+            return jsonify(errors), 400
+        else:
+            brand = Brand.create(
+                data.get('name'), 
+                data.get('description')
+            )
+            return jsonify(
+                brand_schema.dump(brand)
+            ), 201
 
 
 class BrandListView(MethodView):
     def get(self):
-        return jsonify({
-            'message': 'List of brands',
-            'data': [{
-                'id': brand.id,
-                'name': brand.name,
-                'description': brand.description if brand.description else 'Description not registered'
-            } for brand in Brand.get_all()]
-        })
+        return jsonify(
+            brands_schema.dump(
+                Brand.get_all()
+            )
+        )
 
 
 class PhoneCreateView(MethodView):

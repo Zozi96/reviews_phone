@@ -25,8 +25,11 @@ class SignupUserView(MethodView):
 
 class UserListView(MethodView):
     def get(self):
-        users = User.query.all()
-        return jsonify(users_schema.dump(users)), 200
+        return jsonify(
+            users_schema.dump(
+                User.query.all()
+            )
+        ), 200
 
 
 class UserGetEdit(MethodView):
