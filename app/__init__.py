@@ -1,5 +1,5 @@
 from flask import Flask
-from .core.extensions import db, bcrypt, jwt, ma
+from .core import extensions
 from .models import tables
 from .routers import endpoints
 
@@ -14,9 +14,9 @@ def create_app(config):
     for endpoint in endpoints:
         app.register_blueprint(endpoint)
     with app.app_context():
-        db.init_app(app)
-        db.create_all()
-        bcrypt.init_app(app)
-        ma.init_app(app)
-        jwt.init_app(app)
+        extensions.db.init_app(app)
+        extensions.migrate.init_app(app=app, db=extensions.db)
+        extensions.bcrypt.init_app(app)
+        extensions.ma.init_app(app)
+        extensions.jwt.init_app(app)
     return app

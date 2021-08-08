@@ -150,6 +150,8 @@ cython_debug/
 
 app/reviews.db
 
+migrations/
+
 ### Python ###
 # Byte-compiled / optimized / DLL files
 
