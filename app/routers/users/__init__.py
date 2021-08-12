@@ -26,3 +26,9 @@ api.add_url_rule(
     view_func=endpoints.LoginUserView.as_view('login'),
     methods=['POST']
 )
+
+api.add_url_rule(
+    '/current_user',
+    view_func=endpoints.CurrentUserView.as_view('current_user'),
+    methods=['GET']
+)

@@ -1,17 +1,16 @@
 from flask import request, jsonify
 from flask.views import MethodView
-from flask_jwt_extended import create_access_token
+from flask_jwt_extended import create_access_token, jwt_required
 from app.models.users import User
-from app.schemas.users import (
-    user_schema, users_schema, params_user_schema, params_user_login_schema)
+from app.schemas import users
 
 
 class SignupUserView(MethodView):
     def post(self):
         data = request.get_json()
-        error = params_user_schema.validate(data)
-        if error:
-            return jsonify(message=error), 400
+        errors = users.params_user_schema.validate(data)
+        if errors:
+            return jsonify(message=errors), 400
         user = User.create(
             username=data.get('username'),
             email=data.get('email'),
@@ -19,15 +18,15 @@ class SignupUserView(MethodView):
         )
         return jsonify({
             'message': 'User created successfully',
-            'data': user_schema.dump(user)
+            'data': users.user_schema.dump(user)
         }), 201
 
 
 class UserListView(MethodView):
     def get(self):
         return jsonify(
-            users_schema.dump(
-                User.query.all()
+            users.users_schema.dump(
+                User.get_all()
             )
         ), 200
 
@@ -35,14 +34,14 @@ class UserListView(MethodView):
 class UserGetEdit(MethodView):
     def get(self, id):
         user = User.query.get_or_404(id)
-        return jsonify(user_schema.dump(user)), 200
+        return jsonify(users.user_schema.dump(user)), 200
 
 
 class LoginUserView(MethodView):
     def post(self):
         data = request.get_json()
         user = User.get_by_username(data.get('username'))
-        error = params_user_login_schema.validate(data)
+        error = users.params_user_login_schema.validate(data)
         if error:
             return jsonify(error), 400
         elif not user.check_password(data.get('password')):
@@ -52,3 +51,10 @@ class LoginUserView(MethodView):
             'username': user.username,
             'access_token': create_access_token(identity=user.id)
         }), 200
+
+
+class CurrentUserView(MethodView):
+    @jwt_required()
+    def get(self):
+        user = User.get_current_identity()
+        return jsonify(logged_in_as=user.username), 200
