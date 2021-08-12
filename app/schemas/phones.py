@@ -11,9 +11,9 @@ class ParamsPhoneSchema(ma.Schema):
         if Phone.get_by_name(value):
             raise validate.ValidationError('Phone with this name already exists.')
 
-    brand = fields.Integer(required=True, validate=validate.Length(min=1))
+    brand = fields.Integer(required=True)
     name = fields.String(required=True, validate=validate.Length(min=1, max=100))
-    date_release = fields.Date(required=True)
+    date_release = fields.DateTime(format='%Y-%m-%d', required=True)
 
 phone_schema = PhoneSchema()
 phones_schema = PhoneSchema(many=True)

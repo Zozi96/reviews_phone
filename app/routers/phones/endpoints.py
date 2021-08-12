@@ -11,22 +11,13 @@ class BrandCreateView(MethodView):
         if errors:
             return jsonify(errors), 400
         else:
-            brand = Brand.create(
-                data.get('name'), 
-                data.get('description')
-            )
-            return jsonify(
-                brand_schema.dump(brand)
-            ), 201
+            brand = Brand.create(data.get('name'), data.get('description'))
+            return jsonify(brand_schema.dump(brand)), 201
 
 
 class BrandListView(MethodView):
     def get(self):
-        return jsonify(
-            brands_schema.dump(
-                Brand.get_all()
-            )
-        )
+        return jsonify(brands_schema.dump(Brand.get_all())), 200
 
 
 class PhoneCreateView(MethodView):
@@ -38,7 +29,7 @@ class PhoneCreateView(MethodView):
         else: 
             phone = Phone.create(
                 name=data.get('name'), 
-                brand_id=data.get('brand_id'), 
+                brand_id=data.get('brand'), 
                 date_release=data.get('date_release')
             )
             return jsonify({

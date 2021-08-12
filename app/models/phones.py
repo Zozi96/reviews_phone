@@ -1,3 +1,4 @@
+from datetime import datetime
 from app.core.extensions import db
 
 
@@ -47,7 +48,8 @@ class Phone(db.Model):
 
     @classmethod
     def create(cls, name, brand_id, date_release):
-        phone = cls(name=name, brand_id=brand_id, date_release=date_release)
+        date = datetime.strptime(date_release, '%Y-%m-%d').date()
+        phone = cls(name=name, brand_id=brand_id, date_release=date)
         db.session.add(phone)
         db.session.commit()
         return phone
