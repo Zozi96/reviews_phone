@@ -10,7 +10,7 @@ class SignupUserView(MethodView):
         data = request.get_json()
         errors = users.params_user_schema.validate(data)
         if errors:
-            return jsonify(message=errors), 400
+            return jsonify(errors), 400
         user = User.create(
             username=data.get('username'),
             email=data.get('email'),

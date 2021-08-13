@@ -19,6 +19,7 @@ class User(db.Model):
         nullable=False
     )
 
+
     @classmethod
     def create(cls, username, email, password):
         pw_hash = bcrypt.generate_password_hash(password).decode('utf-8')
