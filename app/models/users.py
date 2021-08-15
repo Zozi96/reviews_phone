@@ -1,5 +1,5 @@
 from app.core.extensions import db, bcrypt
-
+from flask_jwt_extended import get_jwt_identity
 
 class User(db.Model):
     __tablename__ = 'users'
@@ -18,6 +18,7 @@ class User(db.Model):
         db.String,
         nullable=False
     )
+
 
     @classmethod
     def create(cls, username, email, password):
@@ -55,3 +56,7 @@ class User(db.Model):
     @classmethod
     def get_by_email(cls, email):
         return cls.query.filter_by(email=email).first()
+
+    @classmethod
+    def get_current_identity(cls):
+        return User.get(get_jwt_identity())

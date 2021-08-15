@@ -14,3 +14,15 @@ api.add_url_rule(
     view_func=endpoints.BrandListView.as_view('list_brands'),
     methods=['GET']
 )
+
+api.add_url_rule(
+    '/add',
+    view_func=endpoints.PhoneCreateView.as_view('create_phone'),
+    methods=['POST']
+)
+
+api.add_url_rule(
+    '/all',
+    view_func=endpoints.PhoneListView.as_view('list_phones'),
+    methods=['GET']
+)

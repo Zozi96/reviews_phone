@@ -1,60 +1,60 @@
 from flask import request, jsonify
 from flask.views import MethodView
-from flask_jwt_extended import create_access_token
+from flask_jwt_extended import create_access_token, jwt_required
 from app.models.users import User
+from app.schemas import users
 
 
 class SignupUserView(MethodView):
     def post(self):
         data = request.get_json()
-        username = data.get('username')
-        email = data.get('email')
-        password = data.get('password')
-
-        if not username or not len(username) > 0:
-            return jsonify(message="Username is required"), 400
-        elif len(username) > 120:
-            return jsonify(message="Username must be less than 120 characters"), 400
-        if not email or not len(email) > 0:
-            return jsonify(message="Email is required"), 400
-        elif len(email) > 120:
-            return jsonify(message="Email must be less than 120 characters"), 400
-        if not password or not len(password) > 0:
-            return jsonify(message="Password is required"), 400
-
-        if User.get_by_username(username):
-            return jsonify(message="Username already exists"), 409
-        if User.get_by_email(email):
-            return jsonify(message="Email already exists"), 409
-
-        User.create(
-            username=username,
-            email=email,
-            password=password
+        errors = users.params_user_schema.validate(data)
+        if errors:
+            return jsonify(errors), 400
+        user = User.create(
+            username=data.get('username'),
+            email=data.get('email'),
+            password=data.get('password')
         )
-        data_response = {
-            'username': username,
-            'email': email
-        }
         return jsonify({
             'message': 'User created successfully',
-            'data': [data_response]
+            'data': users.user_schema.dump(user)
         }), 201
+
+
+class UserListView(MethodView):
+    def get(self):
+        return jsonify(
+            users.users_schema.dump(
+                User.get_all()
+            )
+        ), 200
+
+
+class UserGetEdit(MethodView):
+    def get(self, id):
+        user = User.query.get_or_404(id)
+        return jsonify(users.user_schema.dump(user)), 200
 
 
 class LoginUserView(MethodView):
     def post(self):
         data = request.get_json()
-        username = data.get('username')
-        password = data.get('password')
-        if not username or not len(username) > 0:
-            return jsonify(message="Username is required"), 400
-        if not password or not len(password) > 0:
-            return jsonify(message="Password is required"), 400
+        user = User.get_by_username(data.get('username'))
+        error = users.params_user_login_schema.validate(data)
+        if error:
+            return jsonify(error), 400
+        elif not user.check_password(data.get('password')):
+            return jsonify(password=['Wrong password']), 400
 
-        user = User.get_by_username(username)
-        if not user or not user.check_password(password):
-            return jsonify(message="Invalid username or password"), 401
-        access_token = create_access_token(identity=user.id)
+        return jsonify({
+            'username': user.username,
+            'access_token': create_access_token(identity=user.id)
+        }), 200
 
-        return jsonify(access_token=access_token), 200
+
+class CurrentUserView(MethodView):
+    @jwt_required()
+    def get(self):
+        user = User.get_current_identity()
+        return jsonify(logged_in_as=user.username), 200

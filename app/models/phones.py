@@ -1,3 +1,5 @@
+from datetime import datetime
+from sqlalchemy import desc, asc
 from app.core.extensions import db
 
 
@@ -47,7 +49,8 @@ class Phone(db.Model):
 
     @classmethod
     def create(cls, name, brand_id, date_release):
-        phone = cls(name=name, brand_id=brand_id, date_release=date_release)
+        date = datetime.strptime(date_release, '%Y-%m-%d').date()
+        phone = cls(name=name, brand_id=brand_id, date_release=date)
         db.session.add(phone)
         db.session.commit()
         return phone
@@ -59,5 +62,14 @@ class Phone(db.Model):
         return db.session.commit()
 
     @classmethod
+    def get_all(cls):
+        return cls.query.all()
+
+    @classmethod
     def get_by_name(cls, name):
         return cls.query.filter_by(name=name).first()
+
+    @classmethod
+    def get_all_paginate(cls, order, page, per_page=10):
+        sort = asc(cls.id) if order == 'asc' else desc(cls.id)
+        return cls.query.order_by(sort).paginate(page=page, per_page=per_page).items
